@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Consulta SIGTAP × CID-10</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16332E">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CID x SIGTAP">
+
+<style>
+  :root{
+    --bg:#16332E;
+    --bg-deep:#0F2620;
+    --paper:#F6F1E4;
+    --paper-soft:#EFE8D8;
+    --line:#D8CFB8;
+    --ink:#22302A;
+    --ink-soft:#5C6B63;
+    --stamp:#B5482E;
+    --teal:#3E7C72;
+    --teal-deep:#2A5A52;
+    --gold:#C9A24B;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{ margin:0; }
+
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.04), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,255,255,0.03), transparent 45%);
+    color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    padding:calc(20px + var(--safe-top)) 14px calc(40px + var(--safe-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .mono{
+    font-family:"SF Mono","Consolas","Menlo","Courier New",monospace;
+  }
+
+  /* ---------- Header ---------- */
+  .masthead{
+    max-width:980px;
+    margin:0 auto 16px;
+    color:#F6F1E4;
+    position:relative;
+    padding-bottom:16px;
+    border-bottom:1px solid rgba(246,241,228,0.18);
+  }
+  .masthead .eyebrow{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:10.5px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 6px;
+  }
+  .masthead h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:600;
+    font-size:clamp(24px,6vw,38px);
+    margin:0 0 6px;
+    letter-spacing:.01em;
+  }
+  .masthead p{
+    margin:0;
+    font-size:13px;
+    color:#C9D6CF;
+    max-width:660px;
+    line-height:1.5;
+  }
+  .masthead p strong{ color:#9FE0CF; }
+
+  .stamp-badge{
+    position:absolute;
+    top:0;
+    right:0;
+    border:2px solid var(--teal);
+    color:var(--teal);
+    border-radius:50%;
+    width:74px;
+    height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:8.5px;
+    line-height:1.25;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    transform:rotate(8deg);
+    font-weight:700;
+    background:rgba(62,124,114,0.07);
+  }
+  @media (max-width:480px){
+    .stamp-badge{ display:none; }
+  }
+
+  /* ---------- Install banner ---------- */
+  .install-bar{
+    max-width:980px;
+    margin:0 auto 14px;
+    background:rgba(201,162,75,0.14);
+    border:1px solid rgba(201,162,75,0.45);
+    color:#F1E6C8;
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:12.5px;
+    line-height:1.5;
+    display:none;
+  }
+  .install-bar.show{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .install-bar button{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    background:var(--gold);
+    color:#16332E;
+    border:none;
+    border-radius:5px;
+    padding:8px 14px;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  /* ---------- Notice ---------- */
+  .notice{
+    max-width:980px;
+    margin:0 auto 16px;
+    background:rgba(62,124,114,0.14);
+    border:1px solid rgba(62,124,114,0.4);
+    color:#E4EEEA;
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:12px;
+    line-height:1.5;
+  }
+  .notice strong{ color:#9FE0CF; }
+
+  /* ---------- Tabs ---------- */
+  .panel{
+    max-width:980px;
+    margin:0 auto;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:0 4px;
+    position:sticky;
+    top:0;
+    z-index:5;
+    padding-top:4px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:14px;
+    padding:11px 10px 9px;
+    background:var(--paper-soft);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    border-bottom:none;
+    border-radius:8px 8px 0 0;
+    cursor:pointer;
+    position:relative;
+    top:1px;
+    transition:background .15s,color .15s;
+  }
+  .tab.active{
+    background:var(--paper);
+    color:var(--ink);
+    font-weight:600;
+  }
+  .tab .tab-tag{
+    display:block;
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:9.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:2px;
+  }
+
+  /* ---------- Card / form sheet ---------- */
+  .sheet{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:0 8px 8px 8px;
+    padding:18px;
+    box-shadow:0 18px 40px -20px rgba(0,0,0,0.55);
+  }
+
+  .field-label{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:10.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    margin:0 0 8px;
+  }
+
+  .search-row{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+    flex-wrap:wrap;
+  }
+  .search-input{
+    flex:1 1 220px;
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:17px; /* >=16px avoids iOS auto-zoom */
+    padding:10px 4px;
+    border:none;
+    border-bottom:2px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    outline:none;
+    width:100%;
+  }
+  .search-input::placeholder{
+    color:#A39A82;
+    font-style:italic;
+  }
+  .search-input:focus{
+    border-bottom-color:var(--stamp);
+  }
+
+  .hint{
+    margin:10px 0 0;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+  .hint .chip{
+    display:inline-block;
+    font-family:"SF Mono","Consolas",monospace;
+    color:var(--teal-deep);
+    cursor:pointer;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:3px 9px;
+    margin:2px 3px 2px 0;
+    background:#fff;
+  }
+  .hint .chip:active{ background:var(--teal); color:#fff; }
+
+  .result-count{
+    margin:16px 0 10px;
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    border-top:1px solid var(--line);
+    padding-top:10px;
+  }
+  .result-count .num{ color:var(--stamp); font-weight:700; white-space:nowrap; }
+
+  /* ---------- Result cards ---------- */
+  .results{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .ficha{
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#FCFAF2;
+    position:relative;
+    overflow:hidden;
+  }
+  .ficha::before{
+    content:"";
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:5px;
+    background:var(--teal);
+  }
+  .ficha.is-cid::before{ background:var(--stamp); }
+
+  .ficha-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    padding:13px 14px 11px 18px;
+    cursor:pointer;
+  }
+  .ficha-head:active{ background:rgba(62,124,114,0.08); }
+
+  .ficha-code{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:11px;
+    color:var(--teal-deep);
+    background:rgba(62,124,114,0.10);
+    border:1px solid rgba(62,124,114,0.25);
+    border-radius:4px;
+    padding:2px 6px;
+    display:inline-block;
+    margin-bottom:6px;
+    letter-spacing:.03em;
+  }
+  .ficha.is-cid .ficha-code{
+    color:var(--stamp);
+    background:rgba(181,72,46,0.10);
+    border-color:rgba(181,72,46,0.28);
+  }
+  .ficha-title{
+    margin:0;
+    font-size:14px;
+    line-height:1.4;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .ficha-meta{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    font-family:"SF Mono","Consolas",monospace;
+  }
+  .ficha-toggle{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:10px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    padding-top:4px;
+    flex:0 0 auto;
+  }
+
+  .ficha-body{
+    border-top:1px dashed var(--line);
+    padding:12px 14px 14px 18px;
+    display:none;
+  }
+  .ficha.open .ficha-body{ display:block; }
+
+  .ficha-body h4{
+    margin:0 0 8px;
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .linked-list{
+    max-height:300px;
+    overflow-y:auto;
+    padding-right:4px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .linked-row{
+    display:flex;
+    gap:8px;
+    align-items:baseline;
+    padding:6px 0;
+    border-bottom:1px solid rgba(216,207,184,0.6);
+    font-size:12.5px;
+    flex-wrap:wrap;
+  }
+  .linked-row:last-child{ border-bottom:none; }
+  .linked-row .code{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:10.5px;
+    color:var(--teal-deep);
+    flex:0 0 auto;
+    white-space:nowrap;
+  }
+  .linked-row .linked-name{
+    flex:1 1 160px;
+  }
+  .linked-row .linked-value{
+    font-family:"SF Mono","Consolas",monospace;
+    font-size:11px;
+    color:var(--stamp);
+    font-weight:700;
+    white-space:nowrap;
+    margin-left:auto;
+    flex:0 0 auto;
+  }
+  .empty-link{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-style:italic;
+    padding:4px 0;
+  }
+
+  .no-results{
+    text-align:center;
+    padding:34px 16px;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .no-results .mono{ display:block; margin-top:6px; font-size:11.5px; color:var(--teal-deep); }
+
+  footer{
+    max-width:980px;
+    margin:24px auto 0;
+    color:rgba(246,241,228,0.5);
+    font-size:10.5px;
+    font-family:"SF Mono","Consolas",monospace;
+    letter-spacing:.04em;
+    text-align:center;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <div class="stamp-badge">BASE<br>OFICIAL<br>SIGTAP</div>
+    <p class="eyebrow">Tabela de Procedimentos do SUS — SIGTAP</p>
+    <h1>Consulta CID-10 × Procedimento</h1>
+    <p>Busque um CID-10 principal para ver os procedimentos compatíveis, ou um procedimento SIGTAP (grupo 04) para ver os CID-10 aceitos e o valor SUS. <strong>1.564</strong> procedimentos · <strong>4.045</strong> CIDs · <strong>26.712</strong> vínculos · <strong>1.561</strong> com valor SUS cadastrado. Funciona offline após o primeiro carregamento.</p>
+  </div>
+
+  <div class="install-bar" id="install-bar">
+    <span>Instale este app na tela inicial para acesso rápido e offline.</span>
+    <button id="install-btn">Instalar</button>
+  </div>
+
+  <div class="notice">
+    <strong>Sobre os dados —</strong> vínculos da tabela oficial "Procedimento x CID Principal" do SIGTAP/DATASUS. 61 dos 1.564 procedimentos não possuem CID principal obrigatório. Valores SUS (R$) disponíveis para 1.561 dos 1.564 procedimentos (competência 06/2026); 3 aparecem como "valor não disponível".
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="cid">
+        <span class="tab-tag">Campo 01</span>
+        Por CID-10
+      </div>
+      <div class="tab" data-tab="proc">
+        <span class="tab-tag">Campo 02</span>
+        Por Procedimento
+      </div>
+    </div>
+
+    <div class="sheet">
+
+      <div id="panel-cid">
+        <p class="field-label">CID-10 (código ou descrição)</p>
+        <div class="search-row">
+          <input class="search-input mono" id="cid-input" type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="ex.: K35, K801, hérnia...">
+        </div>
+        <p class="hint">
+          <span class="chip" data-fill="K35">K35</span>
+          <span class="chip" data-fill="K801">K801</span>
+          <span class="chip" data-fill="hérnia">hérnia</span>
+          <span class="chip" data-fill="catarata">catarata</span>
+          <span class="chip" data-fill="fratura do fêmur">fratura do fêmur</span>
+        </p>
+        <div class="result-count" id="cid-count"></div>
+        <div class="results" id="cid-results"></div>
+      </div>
+
+      <div id="panel-proc" style="display:none;">
+        <p class="field-label">Procedimento SIGTAP (código ou nome)</p>
+        <div class="search-row">
+          <input class="search-input mono" id="proc-input" type="text" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="ex.: colecistectomia, mastectomia...">
+        </div>
+        <p class="hint">Digite ao menos 3 caracteres. Mostrando até 50 resultados.</p>
+        <div class="result-count" id="proc-count"></div>
+        <div class="results" id="proc-results"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>SIGTAP — Tabela Unificada de Procedimentos · Ministério da Saúde / SUS<br>1.564 procedimentos · 26.712 vínculos CID-Procedimento · 1.561 valores SUS · v3</footer>
+
+<script src="data.js"></script>
+<script>
+const procMap = {};
+PROCEDIMENTOS.forEach(p => procMap[p[0]] = p[1]);
+const cidEntries = Object.entries(CID_DESC);
+
+function normalize(s){
+  return s.toString().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function formatValue(v, withLabel){
+  if(v === null || v === undefined){
+    return withLabel ? "valor não disponível" : "—";
+  }
+  const formatted = v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+  return withLabel ? `R$ ${formatted}` : `R$ ${formatted}`;
+}
+
+/* ---------------- Tabs ---------------- */
+const tabs = document.querySelectorAll(".tab");
+tabs.forEach(t => t.addEventListener("click", () => {
+  tabs.forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  const which = t.dataset.tab;
+  document.getElementById("panel-cid").style.display = which === "cid" ? "block" : "none";
+  document.getElementById("panel-proc").style.display = which === "proc" ? "block" : "none";
+}));
+
+/* ---------------- Quick-fill chips ---------------- */
+document.querySelectorAll(".hint .chip[data-fill]").forEach(el => {
+  el.addEventListener("click", () => {
+    cidInput.value = el.dataset.fill;
+    renderCid();
+  });
+});
+
+/* ---------------- CID search ---------------- */
+const cidInput = document.getElementById("cid-input");
+const cidResults = document.getElementById("cid-results");
+const cidCount = document.getElementById("cid-count");
+const CID_LIMIT = 50;
+
+function renderCid(){
+  const q = normalize(cidInput.value.trim());
+  cidResults.innerHTML = "";
+  if(q.length < 2){
+    cidCount.innerHTML = `<span>Digite ao menos 2 caracteres</span><span class="num mono">${cidEntries.length} CIDs</span>`;
+    return;
+  }
+  const matches = cidEntries.filter(([code,desc]) =>
+    normalize(code).includes(q) || normalize(desc).includes(q)
+  );
+  cidCount.innerHTML = `<span>"<strong>${cidInput.value}</strong>"</span><span class="num mono">${matches.length}${matches.length > CID_LIMIT ? " (mostrando " + CID_LIMIT + ")" : ""}</span>`;
+
+  if(matches.length === 0){
+    cidResults.innerHTML = `<div class="no-results">Nenhum CID-10 encontrado.<span class="mono">Tente um código (ex.: K801) ou termo (ex.: fratura, hérnia)</span></div>`;
+    return;
+  }
+
+  matches.slice(0, CID_LIMIT).forEach((m) => {
+    const [cid, desc] = m;
+    const procs = CID_TO_PROC[cid] || [];
+    const div = document.createElement("div");
+    div.className = "ficha is-cid";
+    div.innerHTML = `
+      <div class="ficha-head">
+        <div>
+          <span class="ficha-code">CID-10 ${cid}</span>
+          <p class="ficha-title">${desc}</p>
+          <div class="ficha-meta">${procs.length} procedimento(s) compatível(is)</div>
+        </div>
+        <div class="ficha-toggle">ver ▾</div>
+      </div>
+      <div class="ficha-body">
+        <h4>Procedimentos SIGTAP compatíveis</h4>
+        <div class="linked-list">
+        ${procs.map(code => `
+          <div class="linked-row">
+            <span class="code">${code}</span>
+            <span class="linked-name">${procMap[code] || "(código não encontrado)"}</span>
+            <span class="linked-value">${formatValue(PROC_VALUE[code])}</span>
+          </div>`).join("")}
+        </div>
+      </div>`;
+    div.querySelector(".ficha-head").addEventListener("click", () => div.classList.toggle("open"));
+    cidResults.appendChild(div);
+  });
+}
+cidInput.addEventListener("input", renderCid);
+renderCid();
+
+/* ---------------- Procedure search ---------------- */
+const procInput = document.getElementById("proc-input");
+const procResults = document.getElementById("proc-results");
+const procCount = document.getElementById("proc-count");
+const PROC_LIMIT = 50;
+
+function renderProc(){
+  const raw = procInput.value.trim();
+  const q = normalize(raw);
+  procResults.innerHTML = "";
+
+  if(q.length < 3){
+    procCount.innerHTML = `<span>Digite ao menos 3 caracteres</span><span class="num mono">${PROCEDIMENTOS.length} itens</span>`;
+    return;
+  }
+
+  const matches = PROCEDIMENTOS.filter(p =>
+    normalize(p[0]).includes(q) || normalize(p[1]).includes(q)
+  );
+
+  procCount.innerHTML = `<span>"<strong>${raw}</strong>"</span><span class="num mono">${matches.length}${matches.length > PROC_LIMIT ? " (mostrando " + PROC_LIMIT + ")" : ""}</span>`;
+
+  if(matches.length === 0){
+    procResults.innerHTML = `<div class="no-results">Nenhum procedimento encontrado.</div>`;
+    return;
+  }
+
+  matches.slice(0, PROC_LIMIT).forEach((p) => {
+    const code = p[0], name = p[1];
+    const cids = PROC_TO_CID[code] || [];
+    const div = document.createElement("div");
+    div.className = "ficha";
+    div.innerHTML = `
+      <div class="ficha-head">
+        <div>
+          <span class="ficha-code">${code}</span>
+          <p class="ficha-title">${name}</p>
+          <div class="ficha-meta">Grupo ${code.slice(0,2)}.${code.slice(3,5)} · ${cids.length} CID(s) · ${formatValue(PROC_VALUE[code], true)}</div>
+        </div>
+        <div class="ficha-toggle">ver ▾</div>
+      </div>
+      <div class="ficha-body">
+        <h4>CID-10 principal compatível</h4>
+        ${cids.length ? `<div class="linked-list">` + cids.map(cid => `
+          <div class="linked-row">
+            <span class="code">${cid}</span>
+            <span>${CID_DESC[cid] || ""}</span>
+          </div>`).join("") + `</div>` : `<div class="empty-link">Sem CID-10 principal obrigatório cadastrado para este procedimento.</div>`}
+      </div>`;
+    div.querySelector(".ficha-head").addEventListener("click", () => div.classList.toggle("open"));
+    procResults.appendChild(div);
+  });
+}
+procInput.addEventListener("input", renderProc);
+renderProc();
+
+/* ---------------- PWA install + service worker ---------------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  });
+}
+
+let deferredPrompt;
+const installBar = document.getElementById("install-bar");
+const installBtn = document.getElementById("install-btn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBar.classList.add("show");
+});
+
+installBtn?.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBar.classList.remove("show");
+});
+
+window.addEventListener("appinstalled", () => {
+  installBar.classList.remove("show");
+});
+</script>
+</body>
+</html>
