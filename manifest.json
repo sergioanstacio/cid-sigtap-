@@ -1,0 +1,32 @@
+{
+  "name": "Consulta CID-10 x Procedimento SIGTAP",
+  "short_name": "CID x SIGTAP",
+  "description": "Consulta offline de compatibilidade entre CID-10 principal e procedimentos cirúrgicos SIGTAP (SUS).",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#16332E",
+  "theme_color": "#16332E",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
